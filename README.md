@@ -31,20 +31,20 @@ Ensure the following are installed:
                      "ggthemes", "kableExtra", "httr", "jsonlite", "ggbeeswarm"))
 
 
-  Installation
+ ## **Installation**
 1. Clone this repository: git clone https://github.com/beccakarpel/MRIQCeptionAnalysis.git
 2. Open the MRIQCeptionAnalysis.qmd file in RStudio or any Quarto-compatible editor.
 
-Usage
+## **Usage**
 
-Prepare Input Files
+# **Prepare Input Files**
 Place the API JSON file (e.g., bold.json) and the local TSV file (e.g., group_bold.tsv) in accessible paths.
 Update the paths in the script:
 "/path/to/bold.json"  # API data
 "/path/to/group_bold.tsv"  # Local data
 
 
-Run the Analysis
+## **Run the Analysis**
 Open the MRIQCeptionAnalysis.qmd file.
 Render the file using Quarto:
 In RStudio: Click the Render button.
@@ -55,29 +55,22 @@ Tables: Top and bottom 10 values for each metric in the local dataset.
 
 
 
-Example Metrics Analyzed
+## **Example Metrics Analyzed**
 
 efc (Entropy Focus Criterion)
-
 fber (Foreground-Background Energy Ratio)
-
 fd_mean (Mean Framewise Displacement)
-
 snr (Signal-to-Noise Ratio)
-
 dvars_std (Standardized DVARS)
-
 fwhm_avg (Average Full Width at Half Maximum)
-
 tsnr (Temporal Signal-to-Noise Ratio)
 
 
-Features Explained
-
-Rain Cloud Plots
+## **Features Explained**
+# **Rain Cloud Plots**
 Rain Cloud plots combine boxplots, jittered data points, and density distributions. They provide an intuitive visualization of data distributions and highlight differences between local and API datasets.
 
-Summary Tables
+# **Summary Tables**
 The analysis generates tables summarizing the top and bottom 10 values for each metric. These are particularly useful for identifying patterns or outliers in the data.
 
 
