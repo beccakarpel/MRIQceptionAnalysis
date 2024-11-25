@@ -37,7 +37,7 @@ Ensure the following are installed:
 
 ## **Usage**
 
-# **Prepare Input Files**
+### **Prepare Input Files**
 Place the API JSON file (e.g., bold.json) and the local TSV file (e.g., group_bold.tsv) in accessible paths.
 Update the paths in the script:
 "/path/to/bold.json"  # API data
@@ -67,10 +67,10 @@ tsnr (Temporal Signal-to-Noise Ratio)
 
 
 ## **Features Explained**
-# **Rain Cloud Plots**
+### **Rain Cloud Plots**
 Rain Cloud plots combine boxplots, jittered data points, and density distributions. They provide an intuitive visualization of data distributions and highlight differences between local and API datasets.
 
-# **Summary Tables**
+### **Summary Tables**
 The analysis generates tables summarizing the top and bottom 10 values for each metric. These are particularly useful for identifying patterns or outliers in the data.
 
 
