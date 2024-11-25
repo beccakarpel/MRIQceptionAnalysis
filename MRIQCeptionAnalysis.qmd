@@ -1,0 +1,162 @@
+---
+title: "mriqc115"
+format: 
+  html: 
+   code-fold: true
+editor: visual
+---
+
+# Comparing API to Local MRIQC Data
+
+```{r, message=FALSE, warning=FALSE}
+library(tinytex)
+library(tidyverse)
+library(readr)
+library(haven)
+library(ggplot2)
+library(knitr)
+library(report)
+library(easystats)
+library(patchwork)
+library(infer)
+library(purrr)
+library(scales)
+library(broom)
+library(BFpack)
+library(brms)
+library(janitor)
+library(parameters)
+library(ggdist)
+library(labelled)
+library(pwr)
+library(tidyquant)
+library(ggthemes)
+library(kableExtra)
+library(httr)
+library(jsonlite)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(readr)
+library(knitr)
+library(tidyverse)
+library(ggplot2)
+library(ggdist)
+library(dplyr)
+library(ggbeeswarm)
+
+```
+
+```{r results="hide", message=FALSE, warning=FALSE}
+# Step 1: Load API data from JSON
+json_lines <- readLines("/Users/rebeccakarpel/Library/Mobile Documents/com~apple~CloudDocs/Desktop/mriqc_20220527/bold.json", n = 1000)
+partial_json <- paste(json_lines, collapse = "\n")
+
+if (grepl("}\\s*\\{", partial_json)) {
+  valid_json <- paste0("[", gsub("}\\s*\\{", "},{", partial_json), "]")
+} else {
+  valid_json <- partial_json
+}
+valid_json <- gsub("NaN", "null", valid_json)
+api_data <- fromJSON(valid_json)
+
+
+# Step 2: Load your local data
+local_data <-  read_tsv("/Users/rebeccakarpel/Library/Mobile Documents/com~apple~CloudDocs/Desktop/XCog-SSH/nochmani_scripts/fmri_scripts/mriqc_results/group_bold.tsv")
+
+
+
+# Step 3: Data Preparation
+# Add a source identifier for both datasets
+local_data$source <- "Local"
+api_data$source <- "API"
+
+# Clean up API data to extract TaskName and any relevant metrics
+api_data_clean <- api_data %>%
+  mutate(ID = `_id`$`$oid`,
+           TaskName = bids_meta$TaskName,
+         Task_ID=bids_meta$task_id,
+         Subject_ID= bids_meta$subject_id,
+         MD_5 = provenance$md5sum,
+         efc=efc) %>% # Extract TaskName
+  select(ID, TaskName, Task_ID, Subject_ID, MD_5,aor,dvars_std, dvars_vstd, efc, fber, fd_mean, fd_num, fd_perc, fwhm_avg, fwhm_x, fwhm_y, fwhm_z, gcor, gsr_x, gsr_y, size_t, size_x, size_y, size_z, snr, summary_bg_k, summary_bg_mad, summary_bg_mean, summary_bg_median, summary_bg_n, summary_bg_p05, summary_bg_p95, summary_fg_k, summary_fg_mad, summary_fg_mean, summary_fg_median, summary_fg_n, summary_fg_p05, summary_fg_p95, summary_fg_stdv, tsnr) %>%
+  as_tibble()
+api_data_clean$source <- "API"
+# Combine the datasets
+combined_data <- bind_rows(local_data %>% select(bids_name, aor,dvars_std, dvars_vstd, efc, fber, fd_mean, fd_num, fd_perc, fwhm_avg, fwhm_x, fwhm_y, fwhm_z, gcor, gsr_x, gsr_y, size_t, size_x, size_y, size_z, snr, summary_bg_k, summary_bg_mad, summary_bg_mean, summary_bg_median, summary_bg_n, summary_bg_p05, summary_bg_p95, summary_fg_k, summary_fg_mad, summary_fg_mean, summary_fg_median, summary_fg_n, summary_fg_p05, summary_fg_p95, summary_fg_stdv, tsnr, source), 
+                            api_data_clean)
+metrics <- c("aor", "dvars_std", "dvars_vstd", "efc", "fber", "fd_mean", 
+             "fd_num", "fd_perc", "fwhm_avg", "fwhm_x", "fwhm_y", "fwhm_z", "gcor", 
+             "gsr_x", "gsr_y", "size_t", "size_x", "size_y", "size_z", "snr", 
+             "summary_bg_k", "summary_bg_mad", "summary_bg_mean", "summary_bg_median", 
+             "summary_bg_n", "summary_bg_p05", "summary_bg_p95", "summary_fg_k", 
+             "summary_fg_mad", "summary_fg_mean", "summary_fg_median", "summary_fg_n", 
+             "summary_fg_p05", "summary_fg_p95", "summary_fg_stdv", "tsnr")
+
+
+```
+
+::: panel-tabset
+## Plots
+
+```{r, message=FALSE, warning=FALSE}
+
+# Loop through each metric and create a plot
+for (metric in metrics) {
+  # Create a ggplot for the current metric
+  p <- ggplot(combined_data, aes_string(x = "factor(source)", y = metric, fill = "source")) +
+    stat_halfeye(adjust = 1, width = 0.3, .width = 0, point_colour = NA, justification = -0.3, show.legend = FALSE) +
+    geom_boxplot(width = 0.1, outlier.color = NA, alpha = 0.5, show.legend = FALSE) +
+    geom_point(alpha = 0.5, aes(color = source), 
+               position = ggbeeswarm::position_beeswarm(corral = "random", 
+                                                        corral.width = 0.8, 
+                                                        priority = "random", 
+                                                        cex = 2.5, 
+                                                        side = -1), show.legend = FALSE) +
+    labs(title = paste("Raincloud Plot: Local vs API Data -", metric), 
+         x = "Source", 
+         y = metric) +
+    scale_fill_brewer(palette = "Set2") +
+    scale_color_brewer(palette = "Set2") +
+    theme_minimal()
+  
+  # Print or save the plot
+  print(p)  # View the plot in RStudio Plots pane
+
+  # Optionally, save the plot to a file
+  #ggsave(filename = paste0("raincloud_plot_", metric, ".png"), plot = p, width = 8, height = 6)
+}
+
+```
+
+## Tables
+
+
+```{r results = "asis"}
+library(gt)
+# Assuming `metrics` is a vector of column names (e.g., c("metric1", "metric2"))
+for (metric in metrics) {
+  top_local <- local_data |>
+    select(bids_name, all_of(metric)) |> # Dynamically select the metric
+    arrange(desc(!!sym(metric))) |>      # Sort in descending order (for top 10)
+    head(10)                             # Select top 10 rows
+   # print(kable(top_local, format = "markdown")) # Print table in markdown format
+gt(top_local)|>
+  tab_header((title= str_c("Top Ten: ", metric)))|>
+  print()
+
+bottom_local <- local_data |>
+    select(bids_name, all_of(metric)) |> # Dynamically select the metric
+    arrange((!!sym(metric))) |>      # Sort in descending order (for top 10)
+    head(10)                             # Select top 10 rows
+   # print(kable(top_local, format = "markdown")) # Print table in markdown format
+gt(top_local)|>
+  tab_header((title= str_c("Bottom Ten: ", metric)))|>
+  print()
+}
+
+```
+
+
+
+
